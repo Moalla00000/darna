@@ -1,0 +1,43 @@
+name: darna
+description: "Darna - Smart local Wi-Fi door lock controller."
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # HTTP client for talking to the ESP32 over the local network.
+  http: ^1.3.0
+
+  # Persist app settings (theme, etc.) and the device bootstrap flag.
+  shared_preferences: ^2.3.0
+
+  # Google fonts (Outfit) for the migrated theme.
+  google_fonts: ^6.2.0
+
+  # Secure, encrypted storage for the phone's own device token (never in source).
+  flutter_secure_storage: ^9.2.0
+  flutter_dotenv: ^6.0.1
+  share_plus: ^12.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env
+
+flutter_launcher_icons:
+  android: true
+  image_path: "assets/icon/icon.png"
