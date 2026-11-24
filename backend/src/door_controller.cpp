@@ -8,23 +8,23 @@ DoorController::~DoorController() {
 bool DoorController::open() {
   Serial.println("Opening door...");
 
-  _servo.attach(_pin, 500, 2400);
-  _servo.setPeriodHertz(50);
+  _servo.attach(_pin, SERVO_MIN_US, SERVO_MAX_US);
+  _servo.setPeriodHertz(SERVO_FREQ_HZ);
   _attached = true;
 
-  _servo.write(0);
-  delay(500);
+  _servo.write(CLOSED_ANGLE);
+  delay(SETTLE_DELAY_MS);
 
-  for (int angle = 0; angle <= 140; angle++) {
+  for (int angle = CLOSED_ANGLE; angle <= OPEN_ANGLE; angle++) {
     _servo.write(angle);
-    delay(15);
+    delay(STEP_DELAY_MS);
   }
 
-  delay(500);
+  delay(SETTLE_DELAY_MS);
 
-  for (int angle = 140; angle >= 0; angle--) {
+  for (int angle = OPEN_ANGLE; angle >= CLOSED_ANGLE; angle--) {
     _servo.write(angle);
-    delay(15);
+    delay(STEP_DELAY_MS);
   }
 
   _servo.detach();

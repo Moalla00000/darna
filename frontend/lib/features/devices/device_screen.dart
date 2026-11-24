@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -37,20 +38,25 @@ class _DeviceScreenState extends State<DeviceScreen> {
       return;
     }
 
-    final (ok, devices, message) = await _esp32Service.listDevices(token: token);
+    final (ok, devices, message) = await _esp32Service.listDevices(
+      token: token,
+    );
     if (!mounted) return;
     setState(() {
       _devices = ok ? devices : [];
-      _errorMessage = ok ? null : (message.isNotEmpty ? message : 'Failed to load devices.');
+      _errorMessage = ok
+          ? null
+          : (message.isNotEmpty ? message : 'Failed to load devices.');
       _isLoading = false;
     });
   }
 
   String _generateToken() {
     final random = Random.secure();
-    return List.generate(32, (i) => random.nextInt(256))
-        .map((b) => b.toRadixString(16).padLeft(2, '0'))
-        .join();
+    return List.generate(
+      32,
+      (i) => random.nextInt(256),
+    ).map((b) => b.toRadixString(16).padLeft(2, '0')).join();
   }
 
   Future<void> _confirmAndRevoke(Map<String, dynamic> device) async {
@@ -73,9 +79,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('Revoke'),
           ),
@@ -86,7 +90,19 @@ class _DeviceScreenState extends State<DeviceScreen> {
     if (confirmed != true) return;
 
     final adminToken = await _tokenStorage.getDeviceToken();
-    if (adminToken == null) return;
+    if (adminToken == null || adminToken.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'No admin token found. Please set up this phone first.',
+          ),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -272,9 +288,13 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
                   if (_devices.isEmpty)
                     Container(
-                      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 40,
+                        horizontal: 20,
+                      ),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                        color: theme.colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Column(
@@ -305,7 +325,8 @@ class _DeviceScreenState extends State<DeviceScreen> {
                     )
                   else
                     ..._devices.map((device) {
-                      final name = device['name']?.toString() ?? 'Unnamed Device';
+                      final name =
+                          device['name']?.toString() ?? 'Unnamed Device';
                       final active = device['active'] == true;
                       final isAdmin = device['isAdmin'] == true;
 
@@ -314,24 +335,33 @@ class _DeviceScreenState extends State<DeviceScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                           side: BorderSide(
-                            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                            color: theme.colorScheme.outlineVariant.withValues(
+                              alpha: 0.5,
+                            ),
                           ),
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           child: Row(
                             children: [
                               CircleAvatar(
                                 backgroundColor: isAdmin
                                     ? Colors.amber.shade100
-                                    : (active ? Colors.blue.shade50 : Colors.grey.shade200),
+                                    : (active
+                                          ? Colors.blue.shade50
+                                          : Colors.grey.shade200),
                                 child: Icon(
                                   isAdmin
                                       ? Icons.admin_panel_settings_rounded
                                       : Icons.smartphone_rounded,
                                   color: isAdmin
                                       ? Colors.amber.shade900
-                                      : (active ? colorScheme.primary : Colors.grey),
+                                      : (active
+                                            ? colorScheme.primary
+                                            : Colors.grey),
                                 ),
                               ),
                               const SizedBox(width: 14),
@@ -355,10 +385,13 @@ class _DeviceScreenState extends State<DeviceScreen> {
                                           const SizedBox(width: 8),
                                           Container(
                                             padding: const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 2),
+                                              horizontal: 8,
+                                              vertical: 2,
+                                            ),
                                             decoration: BoxDecoration(
                                               color: Colors.amber.shade100,
-                                              borderRadius: BorderRadius.circular(10),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
                                             ),
                                             child: Text(
                                               'Admin',
@@ -376,15 +409,23 @@ class _DeviceScreenState extends State<DeviceScreen> {
                                     Row(
                                       children: [
                                         Icon(
-                                          active ? Icons.check_circle : Icons.cancel,
+                                          active
+                                              ? Icons.check_circle
+                                              : Icons.cancel,
                                           size: 14,
-                                          color: active ? Colors.green : Colors.grey,
+                                          color: active
+                                              ? Colors.green
+                                              : Colors.grey,
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          active ? 'Authorized to open door' : 'Revoked',
+                                          active
+                                              ? 'Authorized to open door'
+                                              : 'Revoked',
                                           style: TextStyle(
-                                            color: active ? Colors.green.shade700 : Colors.grey,
+                                            color: active
+                                                ? Colors.green.shade700
+                                                : Colors.grey,
                                             fontSize: 12,
                                           ),
                                         ),
@@ -395,7 +436,8 @@ class _DeviceScreenState extends State<DeviceScreen> {
                               ),
                               if (isAdmin)
                                 Tooltip(
-                                  message: 'Primary admin device cannot be removed',
+                                  message:
+                                      'Primary admin device cannot be removed',
                                   child: Icon(
                                     Icons.lock_outline_rounded,
                                     color: Colors.grey.shade400,
@@ -404,7 +446,10 @@ class _DeviceScreenState extends State<DeviceScreen> {
                                 )
                               else
                                 IconButton(
-                                  icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                                  icon: const Icon(
+                                    Icons.delete_outline_rounded,
+                                    color: Colors.red,
+                                  ),
                                   tooltip: 'Revoke access',
                                   onPressed: () => _confirmAndRevoke(device),
                                 ),
@@ -429,7 +474,10 @@ class _DeviceScreenState extends State<DeviceScreen> {
                             color: Colors.red.shade400,
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: const Icon(Icons.delete_rounded, color: Colors.white),
+                          child: const Icon(
+                            Icons.delete_rounded,
+                            color: Colors.white,
+                          ),
                         ),
                         child: card,
                       );
@@ -439,7 +487,8 @@ class _DeviceScreenState extends State<DeviceScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
@@ -510,7 +559,9 @@ class _AddDeviceSheetState extends State<_AddDeviceSheet> {
 
     final adminToken = await widget.tokenStorage.getDeviceToken();
     if (adminToken == null || adminToken.isEmpty) {
-      setState(() => _error = 'Admin token not found. Please setup this phone first.');
+      setState(
+        () => _error = 'Admin token not found. Please setup this phone first.',
+      );
       return;
     }
 
@@ -539,7 +590,9 @@ class _AddDeviceSheetState extends State<_AddDeviceSheet> {
     } else {
       setState(() {
         _isRegistering = false;
-        _error = message.isNotEmpty ? message : 'Failed to register device on Darna.';
+        _error = message.isNotEmpty
+            ? message
+            : 'Failed to register device on Darna.';
       });
     }
   }
@@ -559,7 +612,8 @@ class _AddDeviceSheetState extends State<_AddDeviceSheet> {
   void _shareToken(String token, String deviceName) {
     SharePlus.instance.share(
       ShareParams(
-        text: 'Darna access token for "$deviceName":\n\n'
+        text:
+            'Darna access token for "$deviceName":\n\n'
             '$token\n\n'
             'Enter this token in the Darna app on your phone to connect to the door.',
         subject: 'Darna Door Token - $deviceName',
@@ -615,7 +669,10 @@ class _AddDeviceSheetState extends State<_AddDeviceSheet> {
                       color: colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(Icons.phonelink_setup_rounded, color: colorScheme.primary),
+                    child: Icon(
+                      Icons.phonelink_setup_rounded,
+                      color: colorScheme.primary,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -659,7 +716,10 @@ class _AddDeviceSheetState extends State<_AddDeviceSheet> {
               if (_error != null) ...[
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.red.shade50,
                     borderRadius: BorderRadius.circular(8),
@@ -667,12 +727,19 @@ class _AddDeviceSheetState extends State<_AddDeviceSheet> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.error_outline, size: 18, color: Colors.red.shade700),
+                      Icon(
+                        Icons.error_outline,
+                        size: 18,
+                        color: Colors.red.shade700,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _error!,
-                          style: TextStyle(color: Colors.red.shade900, fontSize: 13),
+                          style: TextStyle(
+                            color: Colors.red.shade900,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -701,8 +768,13 @@ class _AddDeviceSheetState extends State<_AddDeviceSheet> {
                       )
                     : const Icon(Icons.key_rounded),
                 label: Text(
-                  _isRegistering ? 'Registering on Darna...' : 'Generate Token & Add Device',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  _isRegistering
+                      ? 'Registering on Darna...'
+                      : 'Generate Token & Add Device',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ] else ...[
@@ -715,7 +787,11 @@ class _AddDeviceSheetState extends State<_AddDeviceSheet> {
                       color: Colors.green.shade100,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.check_rounded, color: Colors.green.shade800, size: 24),
+                    child: Icon(
+                      Icons.check_rounded,
+                      color: Colors.green.shade800,
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -756,7 +832,9 @@ class _AddDeviceSheetState extends State<_AddDeviceSheet> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  color: colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: colorScheme.outlineVariant),
                 ),
@@ -779,10 +857,17 @@ class _AddDeviceSheetState extends State<_AddDeviceSheet> {
                           onTap: () => _copyToken(_registeredToken!),
                           borderRadius: BorderRadius.circular(6),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             child: Row(
                               children: [
-                                Icon(Icons.copy_rounded, size: 14, color: colorScheme.primary),
+                                Icon(
+                                  Icons.copy_rounded,
+                                  size: 14,
+                                  color: colorScheme.primary,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   'Quick Copy',
@@ -839,8 +924,10 @@ class _AddDeviceSheetState extends State<_AddDeviceSheet> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: FilledButton.tonalIcon(
-                      onPressed: () =>
-                          _shareToken(_registeredToken!, _registeredDeviceName ?? 'Device'),
+                      onPressed: () => _shareToken(
+                        _registeredToken!,
+                        _registeredDeviceName ?? 'Device',
+                      ),
                       icon: const Icon(Icons.share_rounded, size: 18),
                       label: const Text('Share'),
                       style: FilledButton.styleFrom(
@@ -865,7 +952,10 @@ class _AddDeviceSheetState extends State<_AddDeviceSheet> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('Done', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Done',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ],

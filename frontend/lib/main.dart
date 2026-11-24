@@ -4,7 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:darna/core/theme.dart';
 import 'package:darna/features/splash/splash_screen.dart';
 
-final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.light);
+final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier<ThemeMode>(
+  ThemeMode.light,
+);
 
 Future<SharedPreferences> _prefsFuture = SharedPreferences.getInstance();
 Future<SharedPreferences> get sharedPrefs => _prefsFuture;

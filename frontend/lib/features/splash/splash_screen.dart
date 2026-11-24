@@ -23,12 +23,14 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
     _controller.forward();
     _navigateAfterSplash();
   }
@@ -64,11 +66,7 @@ class _SplashScreenState extends State<SplashScreen>
         color: Colors.white.withValues(alpha: 0.2),
         shape: BoxShape.circle,
       ),
-      child: const Icon(
-        Icons.home_rounded,
-        size: 80,
-        color: Colors.white,
-      ),
+      child: const Icon(Icons.home_rounded, size: 80, color: Colors.white),
     );
   }
 
@@ -87,11 +85,7 @@ class _SplashScreenState extends State<SplashScreen>
   Widget _buildSubtitle() {
     return const Text(
       'Smart Door Control',
-      style: TextStyle(
-        color: Colors.white70,
-        fontSize: 16,
-        letterSpacing: 0.5,
-      ),
+      style: TextStyle(color: Colors.white70, fontSize: 16, letterSpacing: 0.5),
     );
   }
 
@@ -105,7 +99,9 @@ class _SplashScreenState extends State<SplashScreen>
             end: Alignment.bottomRight,
             colors: [
               Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.primary.withBlue(255).withGreen(120),
+              Theme.of(context).colorScheme.primary
+                  .withBlue(255)
+                  .withGreen(120),
             ],
           ),
         ),

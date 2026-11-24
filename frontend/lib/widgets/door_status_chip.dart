@@ -60,10 +60,8 @@ class DoorStatusChip extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             label,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: foregroundColor,
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(context).textTheme.labelLarge
+                ?.copyWith(color: foregroundColor, fontWeight: FontWeight.w600),
           ),
         ],
       ),

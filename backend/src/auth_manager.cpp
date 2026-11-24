@@ -147,6 +147,7 @@ int AuthManager::addDevice(const String& name, const String& token) {
   if (findSlotByHash(tokenHash) >= 0) return -1; // already registered
 
   int slot = findReusableSlot();
+  if (slot < 0 || slot >= MAX_DEVICES) return -1; // Device table is full.
   bool isFirstDevice = !hasAdmin();
 
   prefs.putString(("name" + String(slot)).c_str(), name);

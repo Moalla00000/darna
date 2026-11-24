@@ -5,6 +5,14 @@
 **/secrets.h
 **/secrets.cpp
 
+# Android signing / Firebase config (never commit these)
+**/key.properties
+**/*.jks
+**/*.keystore
+**/google-services.json
+*.apk
+*.aab
+
 # PlatformIO
 backend/.pio/
 backend/.cache/
@@ -16,6 +24,8 @@ frontend/.flutter-plugins-dependencies
 frontend/.packages
 frontend/build/
 frontend/android/local.properties
+.fvm/
+*.log
 
 # IDE
 .idea/

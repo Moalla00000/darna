@@ -21,6 +21,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadSettings() async {
     final prefs = await sharedPrefs;
+    if (!mounted) return;
     setState(() {
       _isDarkMode = prefs.getBool('isDarkMode') ?? false;
       _isLoading = false;
@@ -30,6 +31,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _toggleDarkMode(bool value) async {
     final prefs = await sharedPrefs;
     await prefs.setBool('isDarkMode', value);
+    if (!mounted) return;
     setState(() => _isDarkMode = value);
     themeNotifier.value = value ? ThemeMode.dark : ThemeMode.light;
   }
@@ -55,7 +57,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.surface,
                     borderRadius: BorderRadius.circular(24),
@@ -70,15 +75,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: Icon(
-                      _isDarkMode ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                      _isDarkMode
+                          ? Icons.dark_mode_rounded
+                          : Icons.light_mode_rounded,
                       color: colorScheme.primary,
                     ),
                     title: const Text(
                       'Dark Mode',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     subtitle: const Text('Toggle application theme'),
-                    trailing: Switch(value: _isDarkMode, onChanged: _toggleDarkMode),
+                    trailing: Switch(
+                      value: _isDarkMode,
+                      onChanged: _toggleDarkMode,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -91,7 +104,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.surface,
                     borderRadius: BorderRadius.circular(24),
@@ -108,7 +124,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     leading: Icon(Icons.device_hub, color: colorScheme.primary),
                     title: const Text(
                       'Authorized Devices',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     subtitle: const Text('Register, name, and revoke phones'),
                     trailing: const Icon(Icons.chevron_right),

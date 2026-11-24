@@ -1,0 +1,11 @@
+# Copy this file to key.properties and fill in your own values.
+#
+#   cp key.properties.example key.properties
+#
+# Never commit key.properties or the keystore itself. Both are gitignored.
+# `storeFile` is resolved relative to frontend/android/app/ unless you use an
+# absolute path. Keep the keystore outside version control.
+storePassword=YOUR_STORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=YOUR_KEY_ALIAS
+storeFile=upload-keystore.jks

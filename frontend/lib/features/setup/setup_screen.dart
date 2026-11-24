@@ -27,6 +27,23 @@ class _SetupScreenState extends State<SetupScreen> {
     super.dispose();
   }
 
+  Future<bool> _saveDeviceToken(String token, String name) async {
+    final saved = await _tokenStorage.saveDevice(token: token, name: name);
+    if (!saved && mounted) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not save the device token securely. Please try again.',
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+    return saved;
+  }
+
   Future<void> _setup() async {
     final setupToken = _setupTokenController.text.trim();
     final deviceName = _deviceNameController.text.trim();
@@ -41,40 +58,41 @@ class _SetupScreenState extends State<SetupScreen> {
     );
 
     if (ok && deviceToken.isNotEmpty) {
-      await _tokenStorage.saveDevice(token: deviceToken, name: deviceName);
+      if (!await _saveDeviceToken(deviceToken, deviceName)) return;
       if (!mounted) return;
       setState(() => _isLoading = false);
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
       return;
     }
 
     // 2. Otherwise check if this token is an authorized device token shared from an admin
-    final (validToken, verifiedName, _, verifyMsg) =
-        await _esp32Service.verifyAuthToken(token: setupToken);
+    final (validToken, verifiedName, _, verifyMsg) = await _esp32Service
+        .verifyAuthToken(token: setupToken);
 
     if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (validToken) {
       final nameToSave = deviceName.isNotEmpty ? deviceName : verifiedName;
-      await _tokenStorage.saveDevice(token: setupToken, name: nameToSave);
+      if (!await _saveDeviceToken(setupToken, nameToSave)) return;
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
       return;
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          message.isNotEmpty && message != 'Setup rejected by the door controller.'
+          message.isNotEmpty &&
+                  message != 'Setup rejected by the door controller.'
               ? message
               : verifyMsg.isNotEmpty
-                  ? verifyMsg
-                  : 'Invalid token or unable to connect to Darna.',
+              ? verifyMsg
+              : 'Invalid token or unable to connect to Darna.',
         ),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,

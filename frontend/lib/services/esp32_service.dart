@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:http/http.dart' as http;
 import 'package:darna/core/constants.dart';
 
@@ -8,7 +9,9 @@ class Esp32Service {
   final http.Client _client = http.Client();
 
   Future<(bool, String)> openDoor({required String token}) async {
-    final uri = Uri.parse('${AppConstants.esp32BaseUrl}${AppConstants.openDoorEndpoint}');
+    final uri = Uri.parse(
+      '${AppConstants.esp32BaseUrl}${AppConstants.openDoorEndpoint}',
+    );
     try {
       final response = await _client
           .post(
@@ -22,9 +25,21 @@ class Esp32Service {
       if (response.statusCode == 200) {
         return (true, 'Door opened successfully');
       }
-      return (false, 'Door controller returned an error (${response.statusCode}).');
+      try {
+        final data = jsonDecode(response.body);
+        if (data is Map && data['message'] != null) {
+          return (false, data['message'] as String);
+        }
+      } catch (_) {}
+      return (
+        false,
+        'Door controller returned an error (${response.statusCode}).',
+      );
     } on SocketException {
-      return (false, "Couldn't connect to your home device. Make sure you're on your home Wi-Fi.");
+      return (
+        false,
+        "Couldn't connect to your home device. Make sure you're on your home Wi-Fi.",
+      );
     } on http.ClientException {
       return (false, 'Connection error. Please try again.');
     } on TimeoutException {
@@ -34,24 +49,44 @@ class Esp32Service {
     }
   }
 
-  Future<(bool, List<Map<String, dynamic>>, String)> listDevices(
-      {required String token}) async {
-    final uri = Uri.parse('${AppConstants.esp32BaseUrl}${AppConstants.devicesEndpoint}');
+  Future<(bool, List<Map<String, dynamic>>, String)> listDevices({
+    required String token,
+  }) async {
+    final uri = Uri.parse(
+      '${AppConstants.esp32BaseUrl}${AppConstants.devicesEndpoint}',
+    );
     try {
       final response = await _client
           .get(uri, headers: {'Authorization': 'Bearer $token'})
           .timeout(const Duration(seconds: 12));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final devices = (data['devices'] as List<dynamic>?)
+        final devices =
+            (data['devices'] as List<dynamic>?)
                 ?.map((e) => Map<String, dynamic>.from(e as Map))
                 .toList() ??
             <Map<String, dynamic>>[];
         return (true, devices, '');
       }
+      try {
+        final data = jsonDecode(response.body);
+        if (data is Map && data['message'] != null) {
+          return (false, <Map<String, dynamic>>[], data['message'] as String);
+        }
+      } catch (_) {}
       return (false, <Map<String, dynamic>>[], 'Failed to load devices.');
     } on SocketException {
-      return (false, <Map<String, dynamic>>[], "Couldn't connect to your home device.");
+      return (
+        false,
+        <Map<String, dynamic>>[],
+        "Couldn't connect to your home device.",
+      );
+    } on TimeoutException {
+      return (
+        false,
+        <Map<String, dynamic>>[],
+        'Connection timed out. Check connection to Darna.',
+      );
     } catch (_) {
       return (false, <Map<String, dynamic>>[], 'Something went wrong.');
     }
@@ -63,7 +98,8 @@ class Esp32Service {
     required String newToken,
   }) async {
     final uri = Uri.parse(
-        '${AppConstants.esp32BaseUrl}${AppConstants.devicesEndpoint}/register');
+      '${AppConstants.esp32BaseUrl}${AppConstants.devicesEndpoint}/register',
+    );
     try {
       final response = await _client
           .post(
@@ -84,9 +120,15 @@ class Esp32Service {
           return (false, data['message'] as String);
         }
       } catch (_) {}
-      return (false, 'Registration rejected by the door controller (${response.statusCode}).');
+      return (
+        false,
+        'Registration rejected by the door controller (${response.statusCode}).',
+      );
     } on SocketException {
-      return (false, "Couldn't connect to Darna. Make sure you're on your home Wi-Fi.");
+      return (
+        false,
+        "Couldn't connect to Darna. Make sure you're on your home Wi-Fi.",
+      );
     } on TimeoutException {
       return (false, 'Connection timed out. Check connection to Darna.');
     } catch (_) {
@@ -100,7 +142,8 @@ class Esp32Service {
     String? targetToken,
   }) async {
     final uri = Uri.parse(
-        '${AppConstants.esp32BaseUrl}${AppConstants.devicesEndpoint}/revoke');
+      '${AppConstants.esp32BaseUrl}${AppConstants.devicesEndpoint}/revoke',
+    );
     try {
       final bodyMap = <String, dynamic>{};
       if (deviceId != null) {
@@ -128,9 +171,15 @@ class Esp32Service {
           return (false, data['message'] as String);
         }
       } catch (_) {}
-      return (false, 'Revocation rejected by the door controller (${response.statusCode}).');
+      return (
+        false,
+        'Revocation rejected by the door controller (${response.statusCode}).',
+      );
     } on SocketException {
-      return (false, "Couldn't connect to Darna. Make sure you're on your home Wi-Fi.");
+      return (
+        false,
+        "Couldn't connect to Darna. Make sure you're on your home Wi-Fi.",
+      );
     } on TimeoutException {
       return (false, 'Connection timed out. Check connection to Darna.');
     } catch (_) {
@@ -139,15 +188,14 @@ class Esp32Service {
   }
 
   // Verify an existing authorized bearer token with the ESP32.
-  Future<(bool, String /* deviceName */, bool /* isAdmin */, String /* message */)>
-      verifyAuthToken({required String token}) async {
+  Future<
+    (bool, String /* deviceName */, bool /* isAdmin */, String /* message */)
+  >
+  verifyAuthToken({required String token}) async {
     final uri = Uri.parse('${AppConstants.esp32BaseUrl}/api/v1/auth/verify');
     try {
       final response = await _client
-          .get(
-            uri,
-            headers: {'Authorization': 'Bearer $token'},
-          )
+          .get(uri, headers: {'Authorization': 'Bearer $token'})
           .timeout(const Duration(seconds: 12));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -163,9 +211,19 @@ class Esp32Service {
       } catch (_) {}
       return (false, '', false, 'Invalid or unauthorized device token.');
     } on SocketException {
-      return (false, '', false, "Couldn't connect to Darna. Make sure you're on your home Wi-Fi.");
+      return (
+        false,
+        '',
+        false,
+        "Couldn't connect to Darna. Make sure you're on your home Wi-Fi.",
+      );
     } on TimeoutException {
-      return (false, '', false, 'Connection timed out. Check connection to Darna.');
+      return (
+        false,
+        '',
+        false,
+        'Connection timed out. Check connection to Darna.',
+      );
     } catch (_) {
       return (false, '', false, 'Something went wrong verifying token.');
     }
@@ -177,15 +235,16 @@ class Esp32Service {
     required String setupToken,
     required String deviceName,
   }) async {
-    final uri = Uri.parse(
-        '${AppConstants.esp32BaseUrl}/api/v1/setup/register');
+    final uri = Uri.parse('${AppConstants.esp32BaseUrl}/api/v1/setup/register');
     try {
       final response = await _client
           .post(
             uri,
             headers: {'Content-Type': 'application/json'},
-            body: jsonEncode(
-                {'setupToken': setupToken, 'deviceName': deviceName}),
+            body: jsonEncode({
+              'setupToken': setupToken,
+              'deviceName': deviceName,
+            }),
           )
           .timeout(const Duration(seconds: 12));
       if (response.statusCode == 200) {
@@ -196,6 +255,8 @@ class Esp32Service {
       return (false, '', 'Setup rejected by the door controller.');
     } on SocketException {
       return (false, '', "Couldn't connect to your home device.");
+    } on TimeoutException {
+      return (false, '', 'Connection timed out. Check connection to Darna.');
     } catch (_) {
       return (false, '', 'Something went wrong.');
     }

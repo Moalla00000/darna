@@ -8,10 +8,15 @@
 #include "door_controller.h"
 
 // --- Configuration ---
-const int SERVO_PIN = 13;
-const unsigned long COOLDOWN_MS = 5000; // prevent accidental/repeated opens
+constexpr int SERVO_PIN = 13;                  // GPIO connected to the servo signal wire.
+constexpr unsigned long COOLDOWN_MS = 5000;    // Prevent accidental/repeated opens.
+constexpr uint16_t HTTP_PORT = 80;             // HTTP server port.
+constexpr uint32_t SERIAL_BAUD = 115200;       // Must match monitor_speed in platformio.ini.
+constexpr uint32_t SERIAL_SETTLE_MS = 200;     // Let the serial connection settle after boot.
+constexpr uint32_t DOOR_TASK_STACK = 4096;     // FreeRTOS stack size for the servo task.
+constexpr UBaseType_t DOOR_TASK_PRIORITY = 1;  // Low priority; keeps the web server responsive.
 
-WebServer server(80);
+WebServer server(HTTP_PORT);
 AuthManager auth;
 DoorController door(SERVO_PIN);
 
@@ -108,7 +113,7 @@ void handleOpenDoor() {
   }
 
   lastOpenTime = now;
-  xTaskCreate(doorOpenTask, "door_task", 4096, NULL, 1, NULL);
+  xTaskCreate(doorOpenTask, "door_task", DOOR_TASK_STACK, NULL, DOOR_TASK_PRIORITY, NULL);
   jsonResponse(200, true, "Door opened");
 }
 
@@ -245,8 +250,8 @@ void handleSetupRegister() {
 }
 
 void setup() {
-  Serial.begin(115200);
-  delay(200);
+  Serial.begin(SERIAL_BAUD);
+  delay(SERIAL_SETTLE_MS);
 
   // --- WiFi + static IP (credentials from gitignored secrets.h) ---
   if (!WiFi.config(LOCAL_IP, GATEWAY, SUBNET, PRIMARY_DNS, SECONDARY_DNS)) {
@@ -270,6 +275,8 @@ void setup() {
   }
 
   // --- Initial setup: generate and print setup token once ---
+  // This is the only token intentionally written to Serial: it is the
+  // physical-presence bootstrap and is invalidated after first use.
   if (auth.needsSetup()) {
     String setupToken = auth.generateSetupToken();
     Serial.println();

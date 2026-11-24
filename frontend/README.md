@@ -1,17 +1,24 @@
-# Darna
+# Darna — Flutter app
 
-A new Flutter project.
+Android app for the Darna smart door lock.
 
-## Getting Started
+See the [root README](../README.md) for hardware, firmware, setup, and usage
+instructions.
 
-This project is a starting point for a Flutter application.
+## Quick start
 
-A few resources to get you started if this is your first Flutter project:
+1. Copy the environment file and set your ESP32 address:
+   ```bash
+   cp ../.env.example .env
+   ```
+2. Install dependencies and run:
+   ```bash
+   flutter pub get
+   flutter run
+   ```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Build a release APK with:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter build apk --release --split-per-abi
+```
