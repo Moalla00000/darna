@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:darna/core/constants.dart';
 import 'package:darna/services/esp32_service.dart';
 import 'package:darna/services/token_storage.dart';
+import 'package:darna/services/session_auth_service.dart';
 import 'package:darna/widgets/door_status_chip.dart';
 import 'package:darna/widgets/primary_action_button.dart';
+import 'package:darna/widgets/pin_entry_dialog.dart';
 import 'package:darna/features/settings/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   DoorStatus _status = DoorStatus.ready;
   bool _isLoading = false;
+  bool _isShowingPinDialog = false;
   String? _deviceToken;
 
   @override
@@ -36,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleOpenDoor() async {
-    if (_isLoading) return;
+    if (_isLoading || _isShowingPinDialog) return;
 
     final token = _deviceToken;
     if (token == null || token.isEmpty) {
@@ -51,6 +54,36 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
       return;
+    }
+
+    final sessionAuth = SessionAuthService();
+    if (!sessionAuth.isAuthenticated) {
+      if (!sessionAuth.isPinConfigured) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'PIN configuration error: DOOR_PIN is missing or invalid in .env.',
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      setState(() => _isShowingPinDialog = true);
+      final authenticated = await showDialog<bool>(
+        context: context,
+        barrierDismissible: true,
+        builder: (_) => const PinEntryDialog(),
+      );
+      if (!mounted) return;
+      setState(() => _isShowingPinDialog = false);
+
+      if (authenticated != true) {
+        return;
+      }
     }
 
     setState(() {
